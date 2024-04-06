@@ -5,7 +5,10 @@ import requests
 from bs4 import BeautifulSoup
 import ndjson
 import os
-import openpyxl
+import io
+import xlsxwriter
+
+
 
 st.set_page_config(
     page_title= '書籍情報取得アプリ'
@@ -105,16 +108,29 @@ except:
 
     
 #エクセルデータの取得
-if st.button('エクセルデータのダウンロード'):
-    try:
-        final_df.to_excel('/Users/michidayuuta/Desktop/選書リスト.xlsx')
-    except:
-        st.write('まだデータがありません')
+
+if st.button('エクセルファイルに変換'):
+    # Create a BytesIO buffer to hold the Excel file
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    final_df.to_excel(writer, sheet_name='Sheet1', index=False)
+    writer.close()
+    output.seek(0)
+
+    # Download the Excel file
+    st.download_button(
+        label='エクセルファイルのダウンロード',
+        data=output,
+        file_name='選書リスト.xlsx',
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
 
 #データを削除
 if st.button('データを削除する'):
     try:
-        os.remove('/Users/michidayuuta/Desktop/Webアプリ開発講義/bookdetails.ndjson')
+        os.remove('./bookdetails.ndjson')
         st.write('ページを更新してください')
     except:
         st.write('まだデータがありません')
